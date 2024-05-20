@@ -10,6 +10,10 @@ Logging to Splunk: All important steps and actions are logged to Splunk using a 
 ## Snapshot
 ![image](https://github.com/satendra-in/Api-data-react-app/assets/29202827/804c1e37-cf7b-4900-81e8-74d2ead6049d)
 
+## Demo
+https://github.com/satendra-in/Api-data-react-app/assets/29202827/31f29b22-aa61-4e23-9ea0-9db8680a50f4
+
+
 ## Components
 #### App.js
 The main component of the application that handles the state and rendering of other components.
