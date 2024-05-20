@@ -1,70 +1,112 @@
-# Getting Started with Create React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# React App with Splunk Logging
+This is a simple React application that fetches data from an external API and logs important actions to Splunk. The app allows users to add URLs to fetch data from, displays the fetched data, and includes logging functionality using a proxy server to forward logs to Splunk.
 
-## Available Scripts
+## Features
+Fetch Data from External API: The app can call an external API and display the data.
+Add/Edit Comments: Users can add and edit comments on the displayed data.
+Logging to Splunk: All important steps and actions are logged to Splunk using a proxy server.
+## Components
+#### App.js
+The main component of the application that handles the state and rendering of other components.
 
-In the project directory, you can run:
+#### AddApiData.js
+A component that allows users to input a URL to fetch data from.
 
-### `npm start`
+#### ApiDataList.js
+A component that displays the fetched data and allows users to add comments.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+#### logger.js
+A logging module that sends logs to Splunk via a proxy server.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Proxy Server Setup
+To enable logging to Splunk, a proxy server is used to handle cross-origin requests and forward logs to the Splunk HTTP Event Collector (HEC). Below is the code for the proxy server.
 
-### `npm test`
+### server.js
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```
+const express = require('express');
+const axios = require('axios');
+const app = express();
+const cors = require('cors');
+const port = 3006;
 
-### `npm run build`
+const SPLUNK_HEC_URL = http://127.0.0.1:8088/services/collector/event;
+const SPLUNK_HEC_TOKEN = '2113c8cf-a34f-4bc6-abd4-d90c37bbcd61';
+const SPLUNK_INDEX = 'main';
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+app.use(cors());
+app.use(express.json());
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+app.post('/log', async (req, res) => {
+    const event = {
+        ...req.body,
+        index: SPLUNK_INDEX
+    };
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+    console.log('Received event to log:', event);
 
-### `npm run eject`
+    try {
+        const response = await axios.post(SPLUNK_HEC_URL, event, {
+            headers: {
+                'Authorization': 'Splunk ${SPLUNK_HEC_TOKEN}',
+                'Content-Type': 'application/json',
+            },
+        });
+        console.log('Response from Splunk:', response.data);
+        res.status(200).send(response.data);
+    } catch (error) {
+        console.error('Error sending event to Splunk:', error);
+        if (error.response) {
+            console.error('Splunk response error data:', error.response.data);
+            res.status(error.response.status).send(error.response.data);
+        } else {
+            res.status(500).send(error.toString());
+        }
+    }
+});
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+app.listen(port, () => {
+    console.log("Proxy server running at http://localhost:${port}");
+});
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Configuring Splunk HEC
+To configure Splunk HTTP Event Collector (HEC), follow these steps:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Enable HEC:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- Log in to your Splunk instance.
+- Go to Settings > Data Inputs.
+- Click on HTTP Event Collector.
+- Click on Global Settings.
+- Enable the HEC and make sure Enable SSL is checked if you're using HTTPS.
 
-## Learn More
+### Create a New HEC Token: 
+- In the HTTP Event Collector page, click on New Token.
+- Give your token a name (e.g., ReactAppLogger).
+- Set the source type to _json.
+- Select an index (e.g., main).
+- Click Next through the remaining steps and click Finish.
+- Copy the token value; you'll need it for the proxy - server configuration.
+### Update server.js with Your Splunk HEC Details:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- Replace the SPLUNK_HEC_URL with your Splunk HEC URL.
+- Replace the SPLUNK_HEC_TOKEN with the token you created.
+- Replace SPLUNK_INDEX with the index you selected for your HEC token.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Running the Application
+- Install Dependencies:
 
-### Code Splitting
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```npm install```
+- Start the Proxy Server:
+Ensure the proxy server is running on port 3006.
 
-### Analyzing the Bundle Size
+```node server.js```
+- Start the React Application:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```npm start```
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Logging to Splunk
+Logs are sent to Splunk through a proxy server that adds the necessary CORS headers. Ensure the proxy server is configured correctly and running.
