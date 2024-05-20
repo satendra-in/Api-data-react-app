@@ -6,6 +6,10 @@ This is a simple React application that fetches data from an external API and lo
 Fetch Data from External API: The app can call an external API and display the data.
 Add/Edit Comments: Users can add and edit comments on the displayed data.
 Logging to Splunk: All important steps and actions are logged to Splunk using a proxy server.
+
+## Snapshot
+![image](https://github.com/satendra-in/Api-data-react-app/assets/29202827/804c1e37-cf7b-4900-81e8-74d2ead6049d)
+
 ## Components
 #### App.js
 The main component of the application that handles the state and rendering of other components.
